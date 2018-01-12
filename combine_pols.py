@@ -11,11 +11,14 @@ class PullandCombine:
         self.mfile = mfile
         self.prefix = ('.').join(mfile.split('.')[0:3])
         self.suffix = ('.').join(mfile.split('.')[4:])
+        self.npol = 4
         self.polarization_array = np.array([-5,-6,-7,-8])
 
     def pullData(self,pol):
         uv = pyuvdata.miriad.Miriad()
-        uv.read_miriad(self.prefix+pol+self.suffix)
+        print './'+self.prefix+pol+self.suffix
+        uv.read_miriad('./'+self.prefix+'.'+pol+'.'+self.suffix)
+        print 'Polarization '+pol+' Loaded.'
         if pol == 'xx':
             self.dim = np.shape(uv.data_array)
             self.data_array = np.zeros((self.dim[0],self.dim[1],self.dim[2],4),dtype=complex)
@@ -37,21 +40,23 @@ class PullandCombine:
             self.flag_array[:,:,:,3] = uv.flag_array[:,:,:,0]
             self.nsample_array[:,:,:,3] = uv.nsample_array[:,:,:,0]
 
-    def combineWrite(self):
+    def combineWrite(self,uvfits=False):
         uv = pyuvdata.miriad.Miriad()
-        uv.read_miriad(self.prefix+'xx'+self.suffix)
+        uv.read_miriad('./'+self.prefix+'.xx.'+self.suffix)
         uv.Npols=self.npol
         uv.data_array=self.data_array
         uv.flag_array=self.flag_array
         uv.nsample_array=self.nsample_array
         uv.polarization_array=self.polarization_array
-        uv.write_uvfits(self.prefix+self.suffix+'.uvfits',spoof_nonessential=True,force_phase=True)
-
+        if uvfits:
+            uv.write_uvfits(self.prefix+'.'+self.suffix+'.uvfits',spoof_nonessential=True,force_phase=True)
+        else:
+            uv.write_miriad(self.prefix+'.'+self.suffix)
 
 pol_arr = ['xx','yy','xy','yx']
-files = ['']
+files = ['zen.2458042.59528.xx.HH.uvOR']
 for f in files:
-    PTG = PullCombine(f)
+    PTG = PullandCombine(f)
     for p in pol_arr:
         PTG.pullData(p)
     PTG.combineWrite()
