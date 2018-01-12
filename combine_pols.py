@@ -3,47 +3,55 @@ import pyuvdata
 from glob import glob
 
 directory='/users/jkerriga/data/shared/HERA_new/IDR1/'
-### We're going to use xx as the container                                                                                                                            
-uvxx = pyuvdata.miriad.Miriad()
-uvxx.read_miriad(directory+'zen.2458042.59528.xx.HH.uvOR')
-print 'Loaded.'
-uvyy = pyuvdata.miriad.Miriad()
-uvyy.read_miriad(directory+'zen.2458042.59528.yy.HH.uvOR')
-print 'Loaded.'
-uvxy = pyuvdata.miriad.Miriad()
-uvxy.read_miriad(directory+'zen.2458042.59528.xy.HH.uvOR')
-print 'Loaded.'
-uvyx = pyuvdata.miriad.Miriad()
-uvyx.read_miriad(directory+'zen.2458042.59528.yx.HH.uvOR')
-print 'Loaded.'
+### We're going to use xx as the container                                                                                                             
 
-npol=4
-dim = np.shape(uvxx.data_array)
-data_array = np.zeros((dim[0],dim[1],dim[2],4),dtype=complex)
-data_array[:,:,:,0] = uvxx.data_array[:,:,:,0]
-data_array[:,:,:,1] = uvyy.data_array[:,:,:,0]
-data_array[:,:,:,2] = uvxy.data_array[:,:,:,0]
-data_array[:,:,:,3] = uvxx.data_array[:,:,:,0]
+class PullandCombine:
+    
+    def __init__(self,mfile):
+        self.mfile = mfile
+        self.prefix = ('.').join(mfile.split('.')[0:3])
+        self.suffix = ('.').join(mfile.split('.')[4:])
+        self.polarization_array = np.array([-5,-6,-7,-8])
+
+    def pullData(self,pol):
+        uv = pyuvdata.miriad.Miriad()
+        uv.read_miriad(self.prefix+pol+self.suffix)
+        if pol == 'xx':
+            self.dim = np.shape(uv.data_array)
+            self.data_array = np.zeros((self.dim[0],self.dim[1],self.dim[2],4),dtype=complex)
+            self.flag_array = np.zeros((self.dim[0],self.dim[1],self.dim[2],4),dtype=bool)
+            self.nsample_array = np.zeros((self.dim[0],self.dim[1],self.dim[2],4))
+            self.data_array[:,:,:,0] = uv.data_array[:,:,:,0]
+            self.flag_array[:,:,:,0] = uv.flag_array[:,:,:,0]
+            self.nsample_array[:,:,:,0] = uv.nsample_array[:,:,:,0]
+        elif pol == 'yy':
+            self.data_array[:,:,:,1] = uv.data_array[:,:,:,0]
+            self.flag_array[:,:,:,1] = uv.flag_array[:,:,:,0]
+            self.nsample_array[:,:,:,1] = uv.nsample_array[:,:,:,0]
+        elif pol == 'xy':
+            self.data_array[:,:,:,2] = uv.data_array[:,:,:,0]
+            self.flag_array[:,:,:,2] = uv.flag_array[:,:,:,0]
+            self.nsample_array[:,:,:,2] = uv.nsample_array[:,:,:,0]
+        elif pol == 'yx':
+            self.data_array[:,:,:,3] = uv.data_array[:,:,:,0]
+            self.flag_array[:,:,:,3] = uv.flag_array[:,:,:,0]
+            self.nsample_array[:,:,:,3] = uv.nsample_array[:,:,:,0]
+
+    def combineWrite(self):
+        uv = pyuvdata.miriad.Miriad()
+        uv.read_miriad(self.prefix+'xx'+self.suffix)
+        uv.Npols=self.npol
+        uv.data_array=self.data_array
+        uv.flag_array=self.flag_array
+        uv.nsample_array=self.nsample_array
+        uv.polarization_array=self.polarization_array
+        uv.write_uvfits(self.prefix+self.suffix+'.uvfits',spoof_nonessential=True,force_phase=True)
 
 
-flag_array = np.zeros((dim[0],dim[1],dim[2],4),dtype=bool)
-flag_array[:,:,:,0] = uvxx.flag_array[:,:,:,0]
-flag_array[:,:,:,1] = uvyy.flag_array[:,:,:,0]
-flag_array[:,:,:,2] = uvxy.flag_array[:,:,:,0]
-flag_array[:,:,:,3] = uvxx.flag_array[:,:,:,0]
-
-nsample_array = np.zeros((dim[0],dim[1],dim[2],4))
-nsample_array[:,:,:,0] = uvxx.nsample_array[:,:,:,0]
-nsample_array[:,:,:,1] = uvyy.nsample_array[:,:,:,0]
-nsample_array[:,:,:,2] = uvxy.nsample_array[:,:,:,0]
-nsample_array[:,:,:,3] = uvxx.nsample_array[:,:,:,0]
-
-polarization_array = np.array([-5,-6,-7,-8])
-
-uvxx.Npols=npol
-uvxx.data_array=data_array
-uvxx.flag_array=flag_array
-uvxx.nsample_array=nsample_array
-uvxx.polarization_array=polarization_array
-
-uvxx.write_uvfits(directory+'zen.2458042.59528.HH.uvOR.uvfits',spoof_nonessential=True,force_phase=True)
+pol_arr = ['xx','yy','xy','yx']
+files = ['']
+for f in files:
+    PTG = PullCombine(f)
+    for p in pol_arr:
+        PTG.pullData(p)
+    PTG.combineWrite()
