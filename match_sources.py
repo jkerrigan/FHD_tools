@@ -51,6 +51,13 @@ dRA = []
 dDec = []
 fluxI = []
 ct=0
+#### Normalize all dimensions prior to finding minimum distance
+decon_RADEC[:,0] = decon_RADEC[:,0]/np.max(np.abs(decon_RADEC[:,0]))
+decon_RADEC[:,1] = decon_RADEC[:,1]/np.max(np.abs(decon_RADEC[:,1]))
+final_cat_I = final_cat_I/np.max(final_cat_I)
+final_cat_fov[:,0] = final_cat_I[:,0]/np.max(np.abs(final_cat_fov[:,0]))
+final_cat_fov[:,1] = final_cat_I[:,1]/np.max(np.abs(final_cat_fov[:,1]))
+
 for (ra,dec) in decon_RADEC:
     idx=angulardist(final_cat_fov,final_cat_I,ra,dec,decon_I[ct])
     dx,dy=final_cat_fov[idx]
