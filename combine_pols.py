@@ -1,8 +1,10 @@
 import numpy as np
 import pyuvdata
 from glob import glob
+import sys
+import os
 
-directory='/users/jkerriga/data/shared/HERA_new/IDR1/'
+
 ### We're going to use xx as the container                                                                                                             
 
 class PullandCombine:
@@ -16,8 +18,8 @@ class PullandCombine:
 
     def pullData(self,pol):
         uv = pyuvdata.miriad.Miriad()
-        print './'+self.prefix+pol+self.suffix
-        uv.read_miriad('./'+self.prefix+'.'+pol+'.'+self.suffix)
+        print self.prefix+'.'+pol+'.'+self.suffix
+        uv.read_miriad(self.prefix+'.'+pol+'.'+self.suffix)
         print 'Polarization '+pol+' Loaded.'
         if pol == 'xx':
             self.dim = np.shape(uv.data_array)
@@ -39,24 +41,34 @@ class PullandCombine:
             self.data_array[:,:,:,3] = uv.data_array[:,:,:,0]
             self.flag_array[:,:,:,3] = uv.flag_array[:,:,:,0]
             self.nsample_array[:,:,:,3] = uv.nsample_array[:,:,:,0]
+        del(uv)
 
     def combineWrite(self,uvfits=False):
         uv = pyuvdata.miriad.Miriad()
         uv.read_miriad('./'+self.prefix+'.xx.'+self.suffix)
         uv.Npols=self.npol
-        uv.data_array=self.data_array
-        uv.flag_array=self.flag_array
-        uv.nsample_array=self.nsample_array
+        uv.data_array=np.copy(self.data_array)
+        uv.flag_array=np.copy(self.flag_array)
+        uv.nsample_array=np.copy(self.nsample_array)
         uv.polarization_array=self.polarization_array
+        del(self.data_array)
+        del(self.flag_array)
+        del(self.nsample_array)
         if uvfits:
             uv.write_uvfits(self.prefix+'.'+self.suffix+'.uvfits',spoof_nonessential=True,force_phase=True)
         else:
             uv.write_miriad(self.prefix+'.'+self.suffix)
 
+
 pol_arr = ['xx','yy','xy','yx']
-files = ['zen.2458042.59528.xx.HH.uvOR']
+#files = ['zen.2458042.50580.xx.HH.uvOR']
+files = sys.argv[1:]
 for f in files:
+    print f
+    if os.path.isfile(('.').join(f.split('.')[:3])+'.HH.uvOR.uvfits'):
+        print 'File exists.'
+        continue
     PTG = PullandCombine(f)
     for p in pol_arr:
         PTG.pullData(p)
-    PTG.combineWrite()
+    PTG.combineWrite(uvfits=True)
