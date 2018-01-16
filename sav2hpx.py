@@ -20,18 +20,21 @@ for beam in beam_files:
         print freq
     freq_arr.append(freq)
     bmtxt = np.loadtxt(beam,skiprows=2)
+    Et = bmtxt[:,3]*np.exp(-1j*np.radians(bmtxt[:,4]))
+    Et = bmtxt[:,5]*np.exp(-1j*np.radians(bmtxt[:,6]))
+    norm = np.sqrt(np.max((Et**2) + (Ep**2)))
     theta_rad = bmtxt[:,0]*np.pi/180.
     phi_rad = bmtxt[:,1]*np.pi/180.
     m=np.zeros(hp.nside2npix(NSIDE))
     pix=hp.ang2pix(NSIDE,theta_rad,phi_rad)
-    m[pix] = bmtxt[:,2]
+    m[pix] = Et/norm#bmtxt[:,2]
     bm_freq_arr.append(m)
     bm_ct+=1
 
 #freq_arr = np.array(freq_arr)
 bm_freq_arr = np.array(bm_freq_arr).T
 print np.shape(bm_freq_arr)
-np.savetxt('HERABeams100-200MHz.txt',bm_freq_arr)
+np.savetxt('HERAPol100-200MHz.txt',bm_freq_arr)
 
 move2idl = {}
 move2idl['n_side']=NSIDE
