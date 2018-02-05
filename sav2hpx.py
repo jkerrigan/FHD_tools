@@ -21,8 +21,8 @@ for beam in beam_files:
     freq_arr.append(freq)
     bmtxt = np.loadtxt(beam,skiprows=2)
     Et = bmtxt[:,3]*np.exp(-1j*np.radians(bmtxt[:,4]))
-    Et = bmtxt[:,5]*np.exp(-1j*np.radians(bmtxt[:,6]))
-    norm = np.sqrt(np.max((Et**2) + (Ep**2)))
+    Ep = bmtxt[:,5]*np.exp(-1j*np.radians(bmtxt[:,6]))
+    norm = np.sqrt(np.max(np.abs(Et)**2 + np.abs(Ep)**2))
     theta_rad = bmtxt[:,0]*np.pi/180.
     phi_rad = bmtxt[:,1]*np.pi/180.
     m=np.zeros(hp.nside2npix(NSIDE))
