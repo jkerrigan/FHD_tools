@@ -13,8 +13,9 @@ class PullandCombine:
         self.mfile = mfile
         self.prefix = ('.').join(mfile.split('.')[0:3])
         self.suffix = ('.').join(mfile.split('.')[4:])
-        self.npol = 4
-        self.polarization_array = np.array([-5,-6,-7,-8])
+        ### Only pulling xx and yy
+        self.npol = 2
+        self.polarization_array = np.array([-5,-6]) #,-7,-8])
 
     def pullData(self,pol):
         uv = pyuvdata.miriad.Miriad()
@@ -23,9 +24,9 @@ class PullandCombine:
         print 'Polarization '+pol+' Loaded.'
         if pol == 'xx':
             self.dim = np.shape(uv.data_array)
-            self.data_array = np.zeros((self.dim[0],self.dim[1],self.dim[2],4),dtype=complex)
-            self.flag_array = np.zeros((self.dim[0],self.dim[1],self.dim[2],4),dtype=bool)
-            self.nsample_array = np.zeros((self.dim[0],self.dim[1],self.dim[2],4))
+            self.data_array = np.zeros((self.dim[0],self.dim[1],self.dim[2],self.npol),dtype=complex)
+            self.flag_array = np.zeros((self.dim[0],self.dim[1],self.dim[2],self.npol),dtype=bool)
+            self.nsample_array = np.zeros((self.dim[0],self.dim[1],self.dim[2],self.npol))
             self.data_array[:,:,:,0] = uv.data_array[:,:,:,0]
             self.flag_array[:,:,:,0] = uv.flag_array[:,:,:,0]
             self.nsample_array[:,:,:,0] = uv.nsample_array[:,:,:,0]
@@ -60,7 +61,7 @@ class PullandCombine:
             uv.write_miriad(self.prefix+'.'+self.suffix)
 
 
-pol_arr = ['xx','yy','xy','yx']
+pol_arr = ['xx','yy']#,'xy','yx']
 #files = ['zen.2458042.50580.xx.HH.uvOR']
 files = sys.argv[1:]
 for f in files:
