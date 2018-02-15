@@ -80,7 +80,7 @@ print 'Plotting GLOBAL PHASEPASS!'
 gblbpass = np.mean(np.abs(gains[:,0,:,0,0]),0)
 ### Fit only where there's data ###
 frqs_fit = np.linspace(120,180,818-205)
-abs_fit = np.poly1d(np.polyfit(frqs_fit,np.abs(gains[14,0,205:818,0,0]),5))#fit(gblphs)
+abs_fit = np.poly1d(np.polyfit(frqs_fit,np.abs(gains[14,0,205:818,0,0]),1))#fit(gblphs)
 
 
 gain_sums = np.sum(np.abs(gains[:,0,:,0,0]),1)
